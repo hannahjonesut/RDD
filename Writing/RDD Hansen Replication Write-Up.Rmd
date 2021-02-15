@@ -7,24 +7,49 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(learnr)
+library(haven)
+library(tidyverse)
+library(stargazer)
+library(estimatr)
+library(rdd)
+library(rdrobust)
+library(rddensity)
+library(ggplot2)
+
+dwi <- read.csv('https://raw.githubusercontent.com/hannahjonesut/causal-inference-class/master/Data/hansen_dwi.csv')
 ```
 
-## R Markdown
+## Summary
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+The paper is studying the effect of severity of punishment on recidivism.  In this case, the author is looking at drunk driving and the impact of punishments that increase in severity with the increase in blood-alcohol level.  The paper aims to provide some basis for analyzing whether harsher BAC cutoffs and punishments will dis-incentivize the commitment of the offense (drunk driving).  The author is using data from ~500k DUI stops from the state of Washington from 1995 to 2011.  Notably, Washington instituted a 0.08 cut-off for DUI and 0.15 for aggravated DUI in 1999.  So, the author uses the 1999-2007 to look at the impact of having a BAC of 0.08 or 0.15 on recidivism.  The author is looking at discrete BAC thresholds of 0.08 and 0.15 to determine the impact of punishment on recidivism, as a BAC of 0.08 will result in punishment, and a BAD of 0.15 will result in harsher punishment.  The author finds that punishment serves as a good deterrent for drunk driving.  This suggests that lowering the BAC cutoff from 0.08 to 0.05 will be effective in deterring drunk driving behavior and recidivism.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## Replication
 
-```{r cars}
-summary(cars)
+3. 
+```{r}
+
+#create a dummy variable for BAC >= 0.08
+dwi <- dwi %>%
+  mutate( 
+    bac_high  = if_else(bac1 >= 0.08, 1, 0))
 ```
 
-## Including Plots
+4. 
+```{r}
+#sort on running variable to see if any manipulation
+d1 = dwi %>%
+  group_by(bac1)%>%
+  summarize(sum_recid = sum(recidivism))
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+ggplot(data = d1) +
+  geom_col(aes(x = bac1, y = sum_recid)) +
+  labs(
+    title = "Frequency of Recidivism vs Blood Alcohol Content Histogram",
+    caption = "Based on administrative records from the Washington State Impaired Driver Testing Program, 1999–2007.Vertical line at BAC = 0.08.",
+    x="Blood Alcohol Content",
+    y="Frequency") +
+  geom_vline(xintercept = .08, colour = "red", linetype = 1) 
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+5. 

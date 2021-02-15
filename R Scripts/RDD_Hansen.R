@@ -6,8 +6,31 @@ library(estimatr)
 library(rdd)
 library(rdrobust)
 library(rddensity)
+library(ggplot2)
 
 dwi <- read.csv('https://raw.githubusercontent.com/hannahjonesut/causal-inference-class/master/Data/hansen_dwi.csv')
+
+head(dwi)
+
+#create a dummy variable for BAC >= 0.08
+dwi <- dwi %>%
+  mutate( 
+    bac_high  = if_else(bac1 >= 0.08, 1, 0))
+
+#sort on running variable to see if any manipulation
+d1 = dwi %>%
+  group_by(bac1)%>%
+  summarize(sum_recid = sum(recidivism))
+
+ggplot(data = d1) +
+  geom_col(aes(x = bac1, y = sum_recid)) +
+  labs(
+    title = "Frequency of Recidivism vs Blood Alcohol Content Histogram",
+    caption = "Based on administrative records from the Washington State Impaired Driver Testing Program, 1999–2007.Vertical line at BAC = 0.08.",
+    x="Blood Alcohol Content",
+    y="Frequency") +
+  geom_vline(xintercept = .08, colour = "red", linetype = 1) 
+
 
 dat <- tibble(
   x = rnorm(1000, 50, 25)
